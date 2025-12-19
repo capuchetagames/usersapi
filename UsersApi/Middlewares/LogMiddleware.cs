@@ -1,7 +1,7 @@
 using Core.Models;
 using Microsoft.Extensions.Primitives;
 
-namespace CloudGamesApi.Middlewares;
+namespace UsersApi.Middlewares;
 
 public class LogMiddleware
 {

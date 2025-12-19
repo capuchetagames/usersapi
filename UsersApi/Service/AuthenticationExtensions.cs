@@ -3,7 +3,7 @@ using Core;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
-namespace CloudGamesApi.Service;
+namespace UsersApi.Service;
 
 public static class AuthenticationExtensions
 {

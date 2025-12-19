@@ -6,7 +6,6 @@ namespace Infrastructure.Repository;
 
 public class ApplicationDbContext : DbContext
 {
-    //private string _connectionString = "Server=localhost,1433;Database=Db.Users;User Id=sa;Password=rooot1234!#;TrustServerCertificate=True;";
     private string _connectionString;
 
     public ApplicationDbContext()
@@ -31,7 +30,6 @@ public class ApplicationDbContext : DbContext
         if(optionsBuilder.IsConfigured) return;
         
         optionsBuilder.UseSqlServer(_connectionString);
-        //optionsBuilder.UseSqlServer(_configuration.GetValue<string>("ConnectionStrings:ConnectionString"));
         optionsBuilder.UseLazyLoadingProxies();
     }
 

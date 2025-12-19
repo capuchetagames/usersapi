@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CloudGamesApi.Controllers;
+namespace UsersApi.Controllers;
 
 /// <summary>
 /// Gerencia as operações CRUD para os usuários da plataforma.

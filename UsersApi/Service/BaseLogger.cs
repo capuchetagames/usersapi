@@ -1,6 +1,6 @@
 using Core.Models;
 
-namespace CloudGamesApi.Service;
+namespace UsersApi.Service;
 
 public class BaseLogger<T> :  IBaseLogger<T>
 {

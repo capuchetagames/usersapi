@@ -1,7 +1,7 @@
 using Core.Dtos;
 using FluentValidation;
 
-namespace CloudGamesApi.Service.Validator;
+namespace UsersApi.Service.Validator;
 
 public class LoginValidator : AbstractValidator<LoginDto>
 {
