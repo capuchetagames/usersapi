@@ -1,8 +1,4 @@
 using System.Text.Json.Serialization;
-using CloudGamesApi.Configs;
-using CloudGamesApi.Middlewares;
-using CloudGamesApi.Service;
-using CloudGamesApi.Service.Validator;
 using Core.Entity;
 using Core.Models;
 using Core.Repository;
@@ -10,6 +6,10 @@ using FluentValidation;
 using Infrastructure.Repository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using UsersApi.Configs;
+using UsersApi.Middlewares;
+using UsersApi.Service;
+using UsersApi.Service.Validator;
 
 var builder = WebApplication.CreateBuilder(args);
 
