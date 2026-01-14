@@ -16,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json").Build();
 
-var connectionString = configuration.GetConnectionString("ConnectionString");
+var connectionString = configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -54,6 +54,9 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.ApplyMigrations();
+    
+    
     app.UseSwagger();
     app.UseSwaggerUI();
     
@@ -64,7 +67,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
