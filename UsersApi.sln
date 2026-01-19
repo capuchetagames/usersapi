@@ -12,6 +12,31 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{76D3D6C3-B900-43B9-88FE-FD8541BCAD9E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "k8s", "k8s", "{82D687ED-CC01-4BAE-B9C6-81695BA48977}"
+	ProjectSection(SolutionItems) = preProject
+		k8s\k8s-deploy-api.sh = k8s\k8s-deploy-api.sh
+		k8s\k8s-deploy-db.sh = k8s\k8s-deploy-db.sh
+		k8s\k8s-dev-api.sh = k8s\k8s-dev-api.sh
+		k8s\sql-configmap.yaml = k8s\sql-configmap.yaml
+		k8s\sql-deployment.yaml = k8s\sql-deployment.yaml
+		k8s\users-api-configmap.yaml = k8s\users-api-configmap.yaml
+		k8s\users-deployment.yaml = k8s\users-deployment.yaml
+		k8s\users-pod.yaml = k8s\users-pod.yaml
+		k8s\sql-service.yaml = k8s\sql-service.yaml
+		k8s\users-service.yaml = k8s\users-service.yaml
+		k8s\k8s-delete-all.sh = k8s\k8s-delete-all.sh
+		k8s\k8s-start-all-deploy.sh = k8s\k8s-start-all-deploy.sh
+		k8s\k8s-start-all-dev.sh = k8s\k8s-start-all-dev.sh
+		k8s\env.sh = k8s\env.sh
+		k8s\users-secret.yaml = k8s\users-secret.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{401C2BF1-FCF7-47C6-99BF-7B6EC3B701FB}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yaml = docker-compose.yaml
+		Dockerfile = Dockerfile
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
