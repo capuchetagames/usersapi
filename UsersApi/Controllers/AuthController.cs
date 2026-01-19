@@ -137,4 +137,90 @@ public class AuthController : ControllerBase
         
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    /// <summary>
+    /// Valida um token JWT e retorna as informações do usuário.
+    /// </summary>
+    /// <remarks>
+    /// Este endpoint é usado por outros microserviços para validar tokens JWT.<br/>
+    /// Retorna as informações do usuário se o token for válido.
+    /// </remarks>
+    /// <param name="token">Token JWT a ser validado (sem o prefixo 'Bearer ').</param>
+    /// <returns>Informações do usuário se o token for válido.</returns>
+    [HttpPost("validate")]
+    [AllowAnonymous]
+    [Consumes("application/json")]
+    [ProducesResponseType(typeof(TokenValidationResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ValidateToken([FromBody] TokenValidationRequestDto request)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(request.Token))
+            {
+                return Unauthorized(new { message = "Token não fornecido." });
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ClockSkew = TimeSpan.Zero
+            };
+
+            var principal = tokenHandler.ValidateToken(request.Token, validationParameters, out SecurityToken validatedToken);
+            
+            var username = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var role = principal.FindFirst(ClaimTypes.Role)?.Value;
+            var jti = principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(role))
+            {
+                return Unauthorized(new { message = "Token inválido - claims obrigatórias ausentes." });
+            }
+
+            // Buscar usuário no banco para garantir que ainda existe e está ativo
+            var user = _userRepository.GetUserByUsername(username);
+            if (user == null)
+            {
+                _logger.LogWarning($"Token válido mas usuário {username} não encontrado no banco.");
+                return Unauthorized(new { message = "Usuário não encontrado." });
+            }
+
+            var response = new TokenValidationResponseDto
+            {
+                IsValid = true,
+                Username = username,
+                Role = role,
+                UserId = user.Id,
+                TokenId = jti
+            };
+
+            _logger.LogInformation($"Token validado com sucesso para usuário: {username}");
+            return Ok(response);
+        }
+        catch (SecurityTokenExpiredException)
+        {
+            _logger.LogWarning("Token expirado recebido para validação.");
+            return Unauthorized(new { message = "Token expirado." });
+        }
+        catch (SecurityTokenException ex)
+        {
+            _logger.LogWarning($"Token inválido recebido: {ex.Message}");
+            return Unauthorized(new { message = "Token inválido." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Erro inesperado durante validação de token: {ex.Message}");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Erro interno do servidor." });
+        }
+    }
 }
