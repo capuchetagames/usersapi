@@ -13,10 +13,18 @@ using UsersApi.Service.Validator;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json").Build();
+// var configuration = new ConfigurationBuilder()
+//     .AddJsonFile("appsettings.json").Build();
+//var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-var connectionString = configuration.GetConnectionString("DefaultConnection");
+//Pegando as variaveis do k8s
+var host = Environment.GetEnvironmentVariable("DB_HOST");
+var db = Environment.GetEnvironmentVariable("DB_NAME");
+var user = Environment.GetEnvironmentVariable("DB_USER");
+var pass = Environment.GetEnvironmentVariable("DB_PASSWORD");
+
+var connectionString =
+    $"Server={host};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;";
 
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -49,6 +57,8 @@ builder.Services.AddScoped(typeof(IBaseLogger<>), typeof(BaseLogger<>));
 builder.AddJwtAuthentication();
 builder.Services.AddPolicyAuthorization();
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -68,6 +78,8 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
+
+app.MapHealthChecks("/health");
 
 app.UseAuthorization();
 
