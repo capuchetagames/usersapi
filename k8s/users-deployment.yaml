@@ -45,17 +45,17 @@ spec:
             - name: DB_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: users-api-config
+                  name: users-config
                   key: DB_HOST
             - name: DB_NAME
               valueFrom:
                 configMapKeyRef:
-                  name: users-api-config
+                  name: users-config
                   key: DB_NAME
             - name: ASPNETCORE_ENVIRONMENT
               valueFrom:
                 configMapKeyRef:
-                  name: users-api-config
+                  name: users-config
                   key: ASPNETCORE_ENVIRONMENT
             - name: DB_USER
               valueFrom:

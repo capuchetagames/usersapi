@@ -23,7 +23,7 @@ spec:
             - name: ACCEPT_EULA
               valueFrom:
                 configMapKeyRef:
-                  name: users-db-config
+                  name: users-config
                   key: ACCEPT_EULA
             
             - name: SA_PASSWORD

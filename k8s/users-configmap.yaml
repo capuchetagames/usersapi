@@ -6,3 +6,5 @@ data:
   DB_HOST: "users-db"
   DB_NAME: "Db.Users"
   ASPNETCORE_ENVIRONMENT: "Development"
+  ACCEPT_EULA: "Y"
+  MSSQL_PID: "Developer"
