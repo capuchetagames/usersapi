@@ -6,6 +6,7 @@ using FluentValidation;
 using Infrastructure.Repository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using UsersApi.Configs;
 using UsersApi.Middlewares;
 using UsersApi.Service;
@@ -13,18 +14,18 @@ using UsersApi.Service.Validator;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// var configuration = new ConfigurationBuilder()
-//     .AddJsonFile("appsettings.json").Build();
-//var connectionString = configuration.GetConnectionString("DefaultConnection");
+ var configuration = new ConfigurationBuilder()
+     .AddJsonFile("appsettings.Development.json").Build();
+var connectionString = configuration.GetConnectionString("DefaultConnection");
 
 //Pegando as variaveis do k8s
-var host = Environment.GetEnvironmentVariable("DB_HOST");
-var db = Environment.GetEnvironmentVariable("DB_NAME");
-var user = Environment.GetEnvironmentVariable("DB_USER");
-var pass = Environment.GetEnvironmentVariable("DB_PASSWORD");
-
-var connectionString =
-    $"Server={host};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;";
+// var host = Environment.GetEnvironmentVariable("DB_HOST");
+// var db = Environment.GetEnvironmentVariable("DB_NAME");
+// var user = Environment.GetEnvironmentVariable("DB_USER");
+// var pass = Environment.GetEnvironmentVariable("DB_PASSWORD");
+//
+// var connectionString =
+//     $"Server={host};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;";
 
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -59,13 +60,23 @@ builder.Services.AddPolicyAuthorization();
 
 builder.Services.AddHealthChecks();
 
+builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
+
+builder.Services.AddSingleton<IRabbitMqService>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<RabbitMqSettings>>().Value;
+    return new RabbitMqService(settings);
+});
+
+
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.ApplyMigrations();
-    
     
     app.UseSwagger();
     app.UseSwaggerUI();

@@ -1,11 +1,14 @@
+using System.Text;
 using Core;
 using Core.Dtos;
 using Core.Entity;
+using Core.Models;
 using Core.Repository;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using RabbitMQ.Client;
 
 namespace UsersApi.Controllers;
 
@@ -17,15 +20,18 @@ namespace UsersApi.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IRabbitMqService _rabbitMq;
     
     private IValidator<BaseUserDto> _validator;
     private readonly IPasswordHasher<User> _passwordHasher;
     
-    public UserController(IUserRepository userRepository, IValidator<BaseUserDto>  validator, IPasswordHasher<User>  passwordHasher)
+    public UserController(IUserRepository userRepository, IValidator<BaseUserDto>  validator,
+        IPasswordHasher<User>  passwordHasher, IRabbitMqService rabbitMq)
     {
         _userRepository = userRepository;
         _validator = validator;
         _passwordHasher = passwordHasher;
+        _rabbitMq = rabbitMq;
     }
     
     /// <summary>
@@ -207,7 +213,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(typeof(UserResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult PostNewUser([FromBody] BaseUserDto userDto)
+    public async Task<IActionResult> PostNewUser([FromBody] BaseUserDto userDto)
     {
         try
         {
@@ -238,12 +244,27 @@ public class UserController : ControllerBase
                 Permission = user.Permission
             };
             
+            // simula persistência
+            var @event = new UserCreatedEvent(
+                responseDto.Id,
+                responseDto.Name,
+                responseDto.Email
+            );
+
+            await _rabbitMq.PublishAsync(
+                exchange: "users.events",
+                routingKey: "user.created",
+                message: @event
+            );
+            
             return CreatedAtAction(nameof(Get), new { id = user.Id }, responseDto);
         }
         catch (Exception e)
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Erro interno", error = e.Message });
         }
+
+        
     }
     
     /// <summary>
@@ -334,5 +355,43 @@ public class UserController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Erro interno", error = e.Message });
         }
     }
-    
+
+
+    private async void Teste()
+    {
+        var factory = new ConnectionFactory() { 
+            HostName = "rabbitmq",
+            UserName = "admin",
+            Password = "admin"};
+        
+        factory.AutomaticRecoveryEnabled = true;
+
+        await using var connection = await factory.CreateConnectionAsync();
+        await using var channel = await connection.CreateChannelAsync();
+        
+        // await channel.QueueDeclareAsync(
+        //     queue: "new-user-queue",
+        //     durable: true,
+        //     exclusive: false,
+        //     autoDelete: false,
+        //     arguments: null
+        // );
+        
+        
+        await channel.ExchangeDeclareAsync(
+            exchange: "users.events",
+            type: ExchangeType.Topic,
+            durable: true
+        );
+        
+        var message = "Hello RabbitMQ -novo USUARIO";
+        var body = Encoding.UTF8.GetBytes(message);
+
+        await channel.BasicPublishAsync(
+            exchange: "users.events",
+            routingKey: "new-user-queue",
+            body: body
+        );
+        
+    }
 }
