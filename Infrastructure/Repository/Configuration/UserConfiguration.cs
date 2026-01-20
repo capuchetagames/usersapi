@@ -10,7 +10,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.ToTable("Users");
         builder.HasKey(x => x.Id);
-        builder.Property(x=>x.Id).HasColumnType("INT").ValueGeneratedNever().UseIdentityColumn();
+        builder.Property(x=>x.Id).HasColumnType("INT").UseIdentityColumn();
         builder.Property(x => x.Name).HasColumnType("VARCHAR(100)").IsRequired();
         builder.Property(x=>x.Email).HasColumnType("VARCHAR(100)").IsRequired();
         builder.Property(x => x.Password).HasColumnType("VARCHAR(100)").IsRequired();
