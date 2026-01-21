@@ -12,7 +12,7 @@ public class ApplicationDbContext : DbContext
     {
         IConfiguration configuration = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.Development.json")
+            .AddJsonFile("appsettings.json")
             .Build();
         
         _connectionString = configuration.GetConnectionString("DefaultConnection");
