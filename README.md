@@ -375,13 +375,13 @@ kubectl apply -f k8s/users-service.yaml
 Ou use os scripts auxiliares:
 ```bash
 # Deploy completo
-./k8s/k8s-start-all-deploy.sh
+cd k8s && ./k8s-start-all-deploy.sh
 
 # Desenvolvimento
-./k8s/k8s-start-all-dev.sh
+cd k8s && ./k8s-start-all-dev.sh
 
 # Remover tudo
-./k8s/k8s-delete-all.sh
+cd k8s && ./k8s-delete-all.sh
 ```
 
 ## 🧪 Testes
