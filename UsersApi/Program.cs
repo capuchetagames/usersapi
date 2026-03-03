@@ -5,7 +5,6 @@ using Core.Repository;
 using FluentValidation;
 using Infrastructure.Repository;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using UsersApi.Configs;
 using UsersApi.Middlewares;
@@ -14,10 +13,7 @@ using UsersApi.Service.Validator;
 
 var builder = WebApplication.CreateBuilder(args);
 
- var configuration = new ConfigurationBuilder()
-     .AddJsonFile("appsettings.json").Build();
-var connectionString = configuration.GetConnectionString("DefaultConnection");
-
+ 
 //Pegando as variaveis do k8s
 // var host = Environment.GetEnvironmentVariable("DB_HOST");
 // var db = Environment.GetEnvironmentVariable("DB_NAME");
@@ -31,11 +27,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseSqlServer(connectionString);
-    options.UseLazyLoadingProxies();
-}, ServiceLifetime.Scoped);
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
