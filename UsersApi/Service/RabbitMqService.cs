@@ -15,7 +15,7 @@ public class RabbitMqService : IRabbitMqService, IAsyncDisposable
     {
         var factory = new ConnectionFactory
         {
-            HostName = settings.Host,
+            HostName = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? settings.Host,
             UserName = settings.User,
             Password = settings.Password,
             AutomaticRecoveryEnabled = true

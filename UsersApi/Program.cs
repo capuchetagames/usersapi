@@ -19,9 +19,14 @@ var builder = WebApplication.CreateBuilder(args);
 // var db = Environment.GetEnvironmentVariable("DB_NAME");
 // var user = Environment.GetEnvironmentVariable("DB_USER");
 // var pass = Environment.GetEnvironmentVariable("DB_PASSWORD");
-//
-// var connectionString =
-//     $"Server={host};Database={db};User Id={user};Password={pass};TrustServerCertificate=True;";
+
+builder.Services.AddControllers();
+builder.Services.AddValidatorsFromAssemblyContaining<UserValidator>();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerDocumentation();
+
 
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -37,13 +42,6 @@ builder.Services.AddTransient<ICacheService, MemCacheService>();
 
 builder.Services.AddTransient<ICorrelationIdService, CorrelationIdService>();
 
-
-builder.Services.AddControllers();
-builder.Services.AddValidatorsFromAssemblyContaining<UserValidator>();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerDocumentation();
 
 builder.Services.AddScoped(typeof(IBaseLogger<>), typeof(BaseLogger<>));
 
