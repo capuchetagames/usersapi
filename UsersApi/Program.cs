@@ -6,12 +6,25 @@ using FluentValidation;
 using Infrastructure.Repository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using NewRelic.LogEnrichers.Serilog;
+using Serilog;
 using UsersApi.Configs;
 using UsersApi.Middlewares;
 using UsersApi.Service;
 using UsersApi.Service.Validator;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithNewRelicLogsInContext() // método do pacote
+    .WriteTo.File(
+        path: "logs/app.log.json",
+        formatter: new NewRelicFormatter(),
+        rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
  
 //Pegando as variaveis do k8s
