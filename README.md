@@ -34,6 +34,13 @@ O **Users API** é um microserviço robusto desenvolvido em .NET 8 que gerencia 
 - ✅ Documentação Swagger/ReDoc
 - ✅ Middleware de logging com Correlation ID
 
+### Observabilidade e Monitoramento
+- ✅ Integração com **New Relic APM** para monitoramento de performance
+- ✅ Logs estruturados em JSON com **NewRelicFormatter** via Serilog
+- ✅ Enriquecimento de logs com contexto New Relic (`WithNewRelicLogsInContext`)
+- ✅ Encaminhamento automático de logs para New Relic
+- ✅ Instrumentação automática via agente .NET CLR profiler
+
 ## 🚀 Tecnologias
 
 ### Core
@@ -49,6 +56,11 @@ O **Users API** é um microserviço robusto desenvolvido em .NET 8 que gerencia 
 
 ### Mensageria
 - **RabbitMQ Client 7.2** - Message broker
+
+### Observabilidade
+- **New Relic APM** - Monitoramento de performance e rastreamento distribuído
+- **NewRelic.LogEnrichers.Serilog 1.2.0** - Enriquecimento e encaminhamento de logs
+- **Serilog** - Logging estruturado em JSON
 
 ### Documentação
 - **Swashbuckle (Swagger)** - Documentação OpenAPI
@@ -305,6 +317,24 @@ As principais configurações podem ser feitas via `appsettings.json` ou variáv
   }
 }
 ```
+
+### Configuração New Relic
+
+O agente New Relic é instalado automaticamente via Docker e configurado pelas seguintes variáveis de ambiente (definidas no `Dockerfile`):
+
+| Variável | Descrição |
+|----------|-----------|
+| `NEW_RELIC_LICENSE_KEY` | Chave de licença da conta New Relic |
+| `NEW_RELIC_APP_NAME` | Nome do aplicativo no New Relic (`users-api`) |
+| `NEW_RELIC_APPLICATION_LOGGING_ENABLED` | Habilita logging via New Relic |
+| `NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED` | Encaminha logs para New Relic |
+| `NEW_RELIC_APPLICATION_LOGGING_FORWARDING_MAX_SAMPLES_STORED` | Limite de amostras de log (10.000) |
+| `CORECLR_ENABLE_PROFILING` | Habilita o CLR profiler do agente .NET |
+| `CORECLR_PROFILER` | GUID do profiler New Relic |
+| `CORECLR_NEWRELIC_HOME` | Diretório de instalação do agente |
+| `CORECLR_PROFILER_PATH` | Caminho para a biblioteca do profiler |
+
+Os logs estruturados são gravados em `logs/app.log.json` com rotação diária, utilizando o `NewRelicFormatter` do Serilog.
 
 ### Configuração JWT
 
