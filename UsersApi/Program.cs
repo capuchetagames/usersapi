@@ -101,4 +101,6 @@ app.MapControllers();
 
 app.UseLogMiddleware();
 
+Console.WriteLine("UsersApi Up and Running!");
+
 app.Run();

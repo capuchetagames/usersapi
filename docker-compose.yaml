@@ -1,58 +1,30 @@
 ﻿services:
-  #Banco de Dados Sql Server
   users-db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: user_db_sql_server
-    platform: linux/amd64
-    user: root
+    image: postgres:16
+    container_name: user_db_postgres
     environment:
-      ACCEPT_EULA: Y
-      SA_PASSWORD: rooot1234!!
-      MSSQL_PID: Developer
+      POSTGRES_DB: Db.Users
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
     ports:
-      - "1433:1433" 
+      - "5439:5432"
     volumes:
-      - users_sql_data:/var/opt/mssql/data
+      - users_pg_data:/var/lib/postgresql/data
     networks:
       - microsservicos-net
     healthcheck:
-      test: >
-        /opt/mssql-tools18/bin/sqlcmd
-        -S localhost
-        -U sa
-        -P "rooot1234!!"
-        -C
-        -Q "SELECT 1"
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d Db.Users" ]
       interval: 10s
       timeout: 5s
       retries: 10
 
   users-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: users_api_container
-    restart: on-failure
-    ports:
-      - "5200:8080" 
-    environment:
-      RABBITMQ_HOST: rabbitmq
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: >
-        Server=users-db;
-        Database=Db.Users;
-        User Id=sa;
-        Password=rooot1234!!;
-        TrustServerCertificate=True;
-      Jwt__Key: IkV6/I+/6WtC4xTRDjLMdwWl0jkt6UAU2R0NUwsL7fI=
     depends_on:
         users-db:
           condition: service_healthy
-    networks:
-      - microsservicos-net
-
+    
 volumes:
-  users_sql_data:
+  users_pg_data:
 
 networks:
   microsservicos-net:

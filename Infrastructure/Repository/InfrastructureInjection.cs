@@ -13,15 +13,15 @@ public static class InfrastructureInjection
         services.AddDbContext<ApplicationDbContext>(options =>
             options
                 .UseLazyLoadingProxies()
-                .UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
-                sqlOptions =>
-                {
-                    sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 5,
-                        maxRetryDelay: TimeSpan.FromSeconds(10),
-                        errorNumbersToAdd: null);
-                }), ServiceLifetime.Scoped);
+                .UseNpgsql(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(10),
+                            errorCodesToAdd:null);
+                    }), ServiceLifetime.Scoped);
 
         return services;
     }
