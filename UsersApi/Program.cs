@@ -1,7 +1,10 @@
 using System.Text.Json.Serialization;
+using Amazon.DynamoDBv2;
 using Core.Entity;
 using Core.Models;
 using Core.Repository;
+using DynamoDb.Logging;
+using DynamoDb.Services;
 using FluentValidation;
 using Infrastructure.Repository;
 using Microsoft.AspNetCore.Identity;
@@ -15,23 +18,32 @@ using UsersApi.Service.Validator;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Log.Logger = new LoggerConfiguration()
-    .Enrich.FromLogContext()
-    .Enrich.WithNewRelicLogsInContext() // método do pacote
-    .WriteTo.File(
-        path: "logs/app.log.json",
-        formatter: new NewRelicFormatter(),
-        rollingInterval: RollingInterval.Day)
-    .CreateLogger();
+//add logs in a file for new Relic
 
-builder.Host.UseSerilog();
+// Log.Logger = new LoggerConfiguration()
+//     .Enrich.FromLogContext()
+//     .Enrich.WithNewRelicLogsInContext() // método do pacote
+//     .WriteTo.File(
+//         path: "logs/app.log.json",
+//         formatter: new NewRelicFormatter(),
+//         rollingInterval: RollingInterval.Day)
+//     .CreateLogger();
+//
+// builder.Host.UseSerilog();
 
- 
-//Pegando as variaveis do k8s
-// var host = Environment.GetEnvironmentVariable("DB_HOST");
-// var db = Environment.GetEnvironmentVariable("DB_NAME");
-// var user = Environment.GetEnvironmentVariable("DB_USER");
-// var pass = Environment.GetEnvironmentVariable("DB_PASSWORD");
+
+builder.Services.AddDynamoDb(builder.Configuration);
+
+var serviceProvider = builder.Services.BuildServiceProvider();
+var dynamoClient    = serviceProvider.GetRequiredService<IAmazonDynamoDB>();
+var logTableName    = builder.Configuration["DynamoDb:LogTableName"];
+
+
+builder.Logging
+    .ClearProviders()                      
+    .AddConsole()                          
+    .AddDynamoDbLogger(dynamoClient, logTableName, LogLevel.Information);
+
 
 builder.Services.AddControllers();
 builder.Services.AddValidatorsFromAssemblyContaining<UserValidator>();
@@ -76,6 +88,12 @@ builder.Services.AddSingleton<IRabbitMqService>(sp =>
 
 var app = builder.Build();
 
+app.UseLogMiddleware();
+
+//app.UseMiddleware<CorrelationMiddleware>();
+app.UseDynamoLogging();
+
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -99,7 +117,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.UseLogMiddleware();
+
 
 Console.WriteLine("UsersApi Up and Running!");
 
