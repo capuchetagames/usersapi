@@ -1,20 +1,62 @@
 ﻿services:
-  users-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: users_api
-    restart: on-failure
-    ports:
-      - "5200:8080" 
+  users-db:
+    image: postgres:16
+    container_name: user_db_postgres
     environment:
-      RABBITMQ_HOST: rabbitmq
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-      ConnectionStrings__DefaultConnection: ${DB_CONNECTION_STRING}
-      Jwt__Key: ${Jwt__Key}
+      POSTGRES_DB: Db.Users
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    ports:
+      - "5439:5432"
+    volumes:
+      - users_pg_data:/var/lib/postgresql/data
     networks:
       - microsservicos-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d Db.Users" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: user_dynamodb-local
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /data"
+    user: root
+    volumes:
+      - dynamodb-data:/data
+    networks:
+      - microsservicos-net
+    
 
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    container_name: user_dynamodb-admin
+    ports:
+      - "8001:8001"
+    environment:
+      DYNAMO_ENDPOINT: http://dynamodb-local:8000
+    networks:
+      - microsservicos-net
+    depends_on:
+      dynamodb-local:
+        condition: service_started
+
+  users-api:
+    depends_on:
+      users-db:
+        condition: service_healthy
+      dynamodb-local: 
+        condition: service_started
+    
+        
+          
+    
+volumes:
+  users_pg_data:
+  dynamodb-data:
 
 networks:
   microsservicos-net:

@@ -33,9 +33,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "k8s", "k8s", "{82D687ED-CC0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{401C2BF1-FCF7-47C6-99BF-7B6EC3B701FB}"
 	ProjectSection(SolutionItems) = preProject
-		docker-compose.yaml = docker-compose.yaml
-		Dockerfile = Dockerfile
 		docker-compose.local.yaml = docker-compose.local.yaml
+		Dockerfile = Dockerfile
+		docker-compose.api.yaml = docker-compose.api.yaml
 	EndProjectSection
 EndProject
 Global

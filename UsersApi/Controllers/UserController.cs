@@ -25,13 +25,16 @@ public class UserController : ControllerBase
     private IValidator<BaseUserDto> _validator;
     private readonly IPasswordHasher<User> _passwordHasher;
     
+    private readonly ILogger<UserController> _logger;
+    
     public UserController(IUserRepository userRepository, IValidator<BaseUserDto>  validator,
-        IPasswordHasher<User>  passwordHasher, IRabbitMqService rabbitMq)
+        IPasswordHasher<User>  passwordHasher, IRabbitMqService rabbitMq, ILogger<UserController> logger)
     {
         _userRepository = userRepository;
         _validator = validator;
         _passwordHasher = passwordHasher;
         _rabbitMq = rabbitMq;
+        _logger = logger;
     }
     
     /// <summary>
@@ -256,6 +259,9 @@ public class UserController : ControllerBase
                 routingKey: "user.created",
                 message: @event
             );
+            
+            
+            _logger.LogInformation($"Usuário {responseDto.Name} ({responseDto.Email}) criado com sucesso.");
             
             return CreatedAtAction(nameof(Get), new { id = user.Id }, responseDto);
         }
