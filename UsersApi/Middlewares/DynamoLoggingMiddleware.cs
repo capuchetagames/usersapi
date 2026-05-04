@@ -17,7 +17,7 @@ public class DynamoLoggingMiddleware
     {
         var sw      = Stopwatch.StartNew();
         var request = context.Request;
-        var correlationId = context.Items[CorrelationMiddleware.ItemsKey]?.ToString() ?? "-";
+        var correlationId = context.Items[LogMiddleware.ItemsKey]?.ToString() ?? "-";
 
         // ── dados da requisição ──────────────────────────
         var method = request.Method;

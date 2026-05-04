@@ -9,8 +9,6 @@ using FluentValidation;
 using Infrastructure.Repository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using NewRelic.LogEnrichers.Serilog;
-using Serilog;
 using UsersApi.Configs;
 using UsersApi.Middlewares;
 using UsersApi.Service;
@@ -88,9 +86,8 @@ builder.Services.AddSingleton<IRabbitMqService>(sp =>
 
 var app = builder.Build();
 
-app.UseLogMiddleware();
-
 //app.UseMiddleware<CorrelationMiddleware>();
+app.UseLogMiddleware();
 app.UseDynamoLogging();
 
 
