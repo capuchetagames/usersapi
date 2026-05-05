@@ -13,7 +13,7 @@ public static class DynamoDbExtensions
         var useLocal       = configuration.GetValue<bool>("DynamoDb:UseLocal");
         var localUrl = configuration["DynamoDb:LocalUrl"];
         var profile  = configuration["DynamoDb:ProfileName"];
-        var region   = configuration["DynamoDb:Region"];
+        var region   = configuration["AWS_DEFAULT_REGION"];
         //var tableName      = configuration["DynamoDb:TableName"];
         
         if (useLocal)
@@ -27,6 +27,10 @@ public static class DynamoDbExtensions
             var credentials = ResolveProfileCredentials(profile);
     
             services.AddSingleton<IAmazonDynamoDB>(new AmazonDynamoDBClient(credentials, RegionEndpoint.GetBySystemName(region)));    
+        }
+        else
+        {
+            services.AddSingleton<IAmazonDynamoDB>(new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(region)));
         }
 
         
