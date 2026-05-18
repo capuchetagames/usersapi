@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-db
+  namespace: fiapstore
+  labels:
+    app: users-db
+spec:
+  type: ClusterIP
+  selector:
+    app: users-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
