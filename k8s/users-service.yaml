@@ -2,13 +2,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: users-api
+  namespace: fiapstore
+  labels:
+    app: users-api
 spec:
+  type: LoadBalancer
   selector:
     app: users-api
   ports:
-    - protocol: TCP
-      port: 80
+    - name: http
+      protocol: TCP
+      port: 8080
       targetPort: 8080
-#      nodePort: 30080
-#  type: NodePort
-  type: ClusterIP
