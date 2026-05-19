@@ -95,6 +95,19 @@ jobs:
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
+      - name: Inject environment variables
+        run: |
+          kubectl set env deployment/users-api \
+            DB_CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
+            Jwt__Key="${{ secrets.JWT_KEY }}" \
+            DynamoDb__LogTableName="users-logs" \
+            DynamoDb__UseLocal="false" \
+            DynamoDb__Region="us-east-2" \
+            AWS_ACCESS_KEY_ID="${{ secrets.LAMBDA_AWS_ACCESS_KEY_ID }}" \
+            AWS_SECRET_ACCESS_KEY="${{ secrets.LAMBDA_AWS_SECRET_ACCESS_KEY }}" \
+            AWS_DEFAULT_REGION="us-east-2" \
+            -n ${{ env.NAMESPACE }}
+
       - name: Deploy Users API
         run: |
           kubectl set image deployment/users-api users-api=${{ secrets.DOCKERHUB_USERNAME }}/users-api:${{ github.sha }} -n ${{ env.NAMESPACE }}
