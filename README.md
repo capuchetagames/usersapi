@@ -11,6 +11,15 @@ O **Users API** é um microserviço robusto desenvolvido em .NET 8 que gerencia 
 - Autorização baseada em permissões (Admin/User)
 - Validação de tokens para outros microserviços
 - Integração com RabbitMQ para eventos de domínio
+- Persistência de dados com PostgreSQL
+- Logging estruturado de requisições no DynamoDB
+
+## 🆕 Atualizações recentes
+
+- ✅ Migração da persistência para **PostgreSQL** com `Npgsql.EntityFrameworkCore.PostgreSQL`
+- ✅ Estrutura de `docker compose` separada em `docker-compose.local.yaml` e `docker-compose.api.yaml`
+- ✅ Integração de logs da API com **DynamoDB** (middleware + provider customizado)
+- ✅ Novas variáveis de ambiente para integração AWS/DynamoDB
 
 ## ✨ Funcionalidades
 
@@ -35,11 +44,9 @@ O **Users API** é um microserviço robusto desenvolvido em .NET 8 que gerencia 
 - ✅ Middleware de logging com Correlation ID
 
 ### Observabilidade e Monitoramento
-- ✅ Integração com **New Relic APM** para monitoramento de performance
-- ✅ Logs estruturados em JSON com **NewRelicFormatter** via Serilog
-- ✅ Enriquecimento de logs com contexto New Relic (`WithNewRelicLogsInContext`)
-- ✅ Encaminhamento automático de logs para New Relic
-- ✅ Instrumentação automática via agente .NET CLR profiler
+- ✅ Logging estruturado de requisições com envio para **DynamoDB**
+- ✅ Correlation ID para rastreabilidade entre logs
+- ✅ Integração com **New Relic APM** para monitoramento da aplicação em container
 
 ## 🚀 Tecnologias
 
@@ -47,7 +54,7 @@ O **Users API** é um microserviço robusto desenvolvido em .NET 8 que gerencia 
 - **.NET 8.0** - Framework principal
 - **ASP.NET Core** - Web API
 - **Entity Framework Core 8.0** - ORM
-- **SQL Server 2022** - Banco de dados
+- **PostgreSQL 16** - Banco de dados
 
 ### Segurança
 - **JWT Bearer Authentication** - Autenticação
@@ -58,9 +65,9 @@ O **Users API** é um microserviço robusto desenvolvido em .NET 8 que gerencia 
 - **RabbitMQ Client 7.2** - Message broker
 
 ### Observabilidade
+- **AWS DynamoDB** - Persistência de logs estruturados
 - **New Relic APM** - Monitoramento de performance e rastreamento distribuído
-- **NewRelic.LogEnrichers.Serilog 1.2.0** - Enriquecimento e encaminhamento de logs
-- **Serilog** - Logging estruturado em JSON
+- **NewRelic.LogEnrichers.Serilog 1.2.0** - Integração com logs/APM
 
 ### Documentação
 - **Swashbuckle (Swagger)** - Documentação OpenAPI
@@ -102,7 +109,8 @@ UsersApi/
 │   └── Configs/             # Configurações
 ├── UsersApi.Tests/          # Testes unitários
 ├── k8s/                     # Manifests Kubernetes
-├── docker-compose.yaml      # Configuração Docker Compose
+├── docker-compose.local.yaml # Banco local (PostgreSQL)
+├── docker-compose.api.yaml   # API e variáveis da aplicação
 └── Dockerfile               # Dockerfile multi-stage
 ```
 
@@ -110,8 +118,9 @@ UsersApi/
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Docker](https://www.docker.com/get-started) e Docker Compose
-- [SQL Server 2022](https://www.microsoft.com/sql-server) (ou via Docker)
+- [PostgreSQL 16](https://www.postgresql.org/) (ou via Docker)
 - [RabbitMQ](https://www.rabbitmq.com/) (opcional, para eventos)
+- [DynamoDB Local](https://hub.docker.com/r/amazon/dynamodb-local) ou conta AWS com DynamoDB
 
 ## 🔧 Instalação e Execução
 
@@ -123,9 +132,9 @@ git clone https://github.com/capuchetagames/usersapi.git
 cd usersapi
 ```
 
-2. Inicie os serviços:
+2. Inicie os serviços locais da API:
 ```bash
-docker-compose up -d
+docker compose -f docker-compose.local.yaml -f docker-compose.api.yaml up -d
 ```
 
 3. A API estará disponível em: `http://localhost:5200`
@@ -140,7 +149,12 @@ docker-compose up -d
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=Db.Users;User Id=sa;Password=SuaSenha;TrustServerCertificate=True;"
+    "DefaultConnection": "Host=localhost;Port=5439;Database=Db.Users;Username=postgres;Password=SuaSenha;"
+  },
+  "DynamoDb": {
+    "LogTableName": "users-logs",
+    "UseLocal": true,
+    "LocalUrl": "http://localhost:8000"
   }
 }
 ```
@@ -304,7 +318,7 @@ As principais configurações podem ser feitas via `appsettings.json` ou variáv
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=users-db;Database=Db.Users;..."
+    "DefaultConnection": "Host=users-db;Port=5432;Database=Db.Users;Username=postgres;Password=..."
   },
   "Jwt": {
     "Key": "sua-chave-secreta-minimo-32-caracteres",
@@ -314,6 +328,13 @@ As principais configurações podem ser feitas via `appsettings.json` ou variáv
     "Host": "rabbitmq",
     "User": "admin",
     "Password": "admin"
+  },
+  "DynamoDb": {
+    "LogTableName": "users-logs",
+    "UseLocal": false,
+    "LocalUrl": "",
+    "ProfileName": "",
+    "Region": "us-east-2"
   }
 }
 ```
@@ -334,7 +355,7 @@ O agente New Relic é instalado automaticamente via Docker e configurado pelas s
 | `CORECLR_NEWRELIC_HOME` | Diretório de instalação do agente |
 | `CORECLR_PROFILER_PATH` | Caminho para a biblioteca do profiler |
 
-Os logs estruturados são gravados em `logs/app.log.json` com rotação diária, utilizando o `NewRelicFormatter` do Serilog.
+O projeto também suporta envio de logs estruturados para DynamoDB via configuração `DynamoDb:*`.
 
 ### Configuração JWT
 
@@ -346,10 +367,10 @@ openssl rand -base64 32
 ### Kubernetes Environment Variables
 
 Para deployment em Kubernetes, utilize as variáveis do ConfigMap/Secret:
-- `DB_HOST` - Host do banco de dados
-- `DB_NAME` - Nome do banco
-- `DB_USER` - Usuário do banco
-- `DB_PASSWORD` - Senha do banco
+- `ConnectionStrings__DefaultConnection` - String de conexão do PostgreSQL
+- `Jwt__Key` - Chave secreta para assinatura JWT
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_DEFAULT_REGION` - Credenciais e região AWS
+- `DynamoDb__LogTableName` / `DynamoDb__UseLocal` / `DynamoDb__Region` - Configuração do logging em DynamoDB
 
 ## 🚢 Deployment
 
@@ -363,7 +384,7 @@ docker build -t usersapi:latest .
 Executar container:
 ```bash
 docker run -d -p 5200:8080 \
-  -e ConnectionStrings__DefaultConnection="Server=..." \
+  -e ConnectionStrings__DefaultConnection="Host=users-db;Port=5432;Database=Db.Users;Username=postgres;Password=..." \
   -e Jwt__Key="..." \
   usersapi:latest
 ```
@@ -374,7 +395,6 @@ Os manifestos Kubernetes estão disponíveis no diretório `k8s/`:
 
 1. **Banco de Dados:**
 ```bash
-kubectl apply -f k8s/sql-configmap.yaml
 kubectl apply -f k8s/sql-deployment.yaml
 kubectl apply -f k8s/sql-service.yaml
 ```
