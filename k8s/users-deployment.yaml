@@ -26,6 +26,12 @@ spec:
             - configMapRef:
                 name: users-config
           env:
+            - name: NEW_RELIC_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: users-secret
+                  key: NEW_RELIC_LICENSE_KEY
+                  optional: true
             - name: ConnectionStrings__DefaultConnection
               valueFrom:
                 secretKeyRef:
